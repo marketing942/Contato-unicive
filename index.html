@@ -21,7 +21,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/png" href="public/logomarca unicive.png" />
   <link rel="preload" as="image" href="public/background1.webp" fetchpriority="high" />
-  <link rel="preload" as="image" href="public/formados/logo2.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="public/formados/LogoCppem.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="public/formados/LogoUnicive.png" fetchpriority="high" />
 
   <style>
     :root{
@@ -77,6 +78,26 @@
       margin-bottom:4px;
     }
 
+    /* ===== Lockup de parceria (hero) ===== */
+    .hero-brands{
+      display:flex;align-items:center;justify-content:center;
+      gap:clamp(16px,4.5vw,30px);
+      margin-bottom:12px;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,.28));
+    }
+    .hero-brand{height:clamp(42px,11.5vw,60px);width:auto;display:block}
+    .hero-brands__sep{
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+    }
+    .hero-brands__line{
+      width:2px;height:clamp(30px,8vw,44px);border-radius:2px;
+      background:linear-gradient(180deg,transparent,rgba(227,161,27,.65),transparent);
+    }
+    .hero-brands__tag{
+      font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+      color:#c2820a;
+    }
+
     /* ===== Navbar fixo (aparece ao rolar) ===== */
     .navbar{
       position:fixed;top:0;left:0;right:0;z-index:900;
@@ -100,14 +121,24 @@
     .navbar__link{display:inline-flex;line-height:0;cursor:pointer;transition:transform .16s, filter .16s}
     .navbar__link:hover{transform:translateY(-1px);filter:brightness(1.08)}
     .navbar__link:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
-    .navbar__divider{
+    .navbar__center{
+      flex:1 1 auto;display:flex;align-items:center;gap:10px;
+      max-width:360px;
+    }
+    .navbar__line{
       flex:1 1 auto;height:1px;
-      background:linear-gradient(90deg,transparent,rgba(227,161,27,.35),transparent);
+      background:linear-gradient(90deg,transparent,rgba(227,161,27,.5),transparent);
+    }
+    .navbar__partner{
+      font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+      color:var(--gold-light);white-space:nowrap;
     }
     @media (max-width:480px){
-      .navbar__inner{padding:8px 16px;gap:12px}
-      .navbar__logo--unicive{height:27px}
-      .navbar__logo--cppem{height:38px}
+      .navbar__inner{padding:8px 14px;gap:10px}
+      .navbar__logo--unicive{height:26px}
+      .navbar__logo--cppem{height:36px}
+      .navbar__center{gap:7px;max-width:none}
+      .navbar__partner{font-size:9.5px;letter-spacing:1px}
     }
 
     /* ===== Headline ===== */
@@ -628,7 +659,11 @@
   <nav class="navbar" id="navbar" aria-label="Barra de navegação">
     <div class="navbar__inner">
       <img class="navbar__logo navbar__logo--unicive" src="public/logomarca unicive.png" alt="Unicive Caruaru-PE" loading="lazy" decoding="async" />
-      <span class="navbar__divider" aria-hidden="true"></span>
+      <div class="navbar__center">
+        <span class="navbar__line" aria-hidden="true"></span>
+        <span class="navbar__partner">Em parceria</span>
+        <span class="navbar__line" aria-hidden="true"></span>
+      </div>
       <a class="navbar__link" href="https://cppem.com.br" target="_blank" rel="noopener noreferrer" aria-label="Ir para o site do CPPEM">
         <img class="navbar__logo navbar__logo--cppem" src="public/logo-cppem.png" alt="CPPEM Concursos Públicos" loading="lazy" decoding="async" />
       </a>
@@ -638,7 +673,15 @@
   <main class="page">
 
     <!-- Logo UniCV -->
-    <img class="logo" src="public/formados/logo2.png" alt="Unicive Caruaru - PE" fetchpriority="high" decoding="async" />
+    <div class="hero-brands">
+      <img class="hero-brand hero-brand--cppem" src="public/formados/LogoCppem.png" alt="CPPEM Concursos Públicos" fetchpriority="high" decoding="async" />
+      <span class="hero-brands__sep" aria-hidden="true">
+        <span class="hero-brands__line"></span>
+        <span class="hero-brands__tag">+</span>
+        <span class="hero-brands__line"></span>
+      </span>
+      <img class="hero-brand hero-brand--unicive" src="public/formados/LogoUnicive.png" alt="Unicive Caruaru - PE" fetchpriority="high" decoding="async" />
+    </div>
 
     <!-- 1. HEADLINE -->
     <h1 class="headline">

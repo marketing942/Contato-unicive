@@ -68,7 +68,7 @@ document.addEventListener("keydown", (e) => {
 
 /* ---------- Navbar revelado ao rolar (abaixo da logo do topo) ---------- */
 const navbar = document.getElementById("navbar");
-const heroLogo = document.querySelector(".logo");
+const heroLogo = document.querySelector(".hero-brands");
 if (navbar) {
   const revealPoint = () =>
     heroLogo ? heroLogo.offsetTop + heroLogo.offsetHeight - 8 : 120;
