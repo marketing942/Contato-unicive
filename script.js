@@ -5,11 +5,17 @@
 
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxdFplWVSfhTjvyIA7HIWb645xRjGNhBVhTdTf5UMjo0lSpW_A_jCuys0qB4uImKXPQ/exec?aba=UNICIVE";
 
-const PIXELX_WHATSAPP_REDIRECT = "https://pxa.cppem.com.br/lt/unicive-whatsapp-redirect";
+// WhatsApp direto — (81) 99264-0766 — substitui o antigo link rastreado
+const WHATSAPP_NUMERO = "5581992640766";
+const WHATSAPP_REDIRECT = `https://wa.me/${WHATSAPP_NUMERO}`;
 const WHATSAPP_MSG = "Quero saber mais sobre o superior EAD!";
 
 // Sem Ensino Médio → encaminhar para o supletivo (não vai pro WhatsApp)
 const SUPLETIVO_REDIRECT = "https://cppem-supletivo-filiado.vercel.app/";
+
+// Atraso do redirect alinhado ao debounce (1500 ms) da PixelX.
+// Abaixo disso, a navegação cancela a requisição do evento de conversão.
+const REDIRECT_DELAY_MS = 1500;
 
 /* ---------- Popup do formulário ---------- */
 const formModal = document.getElementById("form-modal");
@@ -17,12 +23,12 @@ const openFormTriggers = document.querySelectorAll("#open-form-btn, .js-open-for
 const closeFormBtn = document.getElementById("close-form-btn");
 
 // Redirect ativo — pode ser sobrescrito pelo gatilho (ex.: cards de curso → grupos)
-let activeRedirect = PIXELX_WHATSAPP_REDIRECT;
+let activeRedirect = WHATSAPP_REDIRECT;
 
 async function openFormModal(trigger) {
   if (!formModal) return;
   activeRedirect =
-    (trigger && trigger.dataset && trigger.dataset.redirect) || PIXELX_WHATSAPP_REDIRECT;
+    (trigger && trigger.dataset && trigger.dataset.redirect) || WHATSAPP_REDIRECT;
   formModal.hidden = false;
   document.body.classList.add("modal-open");
 
@@ -81,7 +87,7 @@ if (navbar) {
 }
 
 /* ---------- Validação ---------- */
-const form = document.getElementById("lead-form");
+const form = document.getElementById("BfDnaaTxKjfyDfufDkvR");
 
 function fieldOf(name) {
   const input = form?.querySelector(`[name="${name}"]`);
@@ -106,6 +112,17 @@ function clearError(name) {
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+// Dígitos nacionais (DDD + número), removendo o "+55" que a máscara/PixelX escrevem.
+// Não dá para remover pelos dígitos "55" cru — o DDD 55 (Santa Maria/RS) existe.
+const phoneDigitsNacional = (v) =>
+  v.trim().replace(/^\+\s*55\s*/, "").replace(/\D/g, "");
+
+// Telefone válido: 11 dígitos nacionais e nono dígito ("9") presente.
+const isPhone = (v) => {
+  const d = phoneDigitsNacional(v);
+  return d.length === 11 && d[2] === "9";
+};
+
 function validate() {
   let ok = true;
 
@@ -113,7 +130,7 @@ function validate() {
 
   const nome = document.getElementById("lead_name").value.trim();
   const email = document.getElementById("lead_email").value.trim();
-  const tel = document.getElementById("lead_phone").value.replace(/\D/g, "");
+  const telValue = document.getElementById("lead_phone").value;
   const escolaridade = document.getElementById("escolaridade").value;
 
   if (nome.length < 3) {
@@ -126,8 +143,8 @@ function validate() {
     ok = false;
   }
 
-  if (tel.length < 10) {
-    setError("phone", "Informe um telefone válido com DDD.");
+  if (!isPhone(telValue)) {
+    setError("phone", "Informe um WhatsApp válido com DDD.");
     ok = false;
   }
 
@@ -141,14 +158,11 @@ function validate() {
 
 /* ---------- Envio ---------- */
 if (form) {
-  const btn = document.getElementById("BfDnaaTxKjfyDfufDkvR");
+  const btn = document.getElementById("lead_submit");
   const success = document.getElementById("form-success");
+  let enviado = false; // guarda anti-duplicação de Lead
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
+  async function enviarLead() {
     btn.disabled = true;
     btn.textContent = "ENVIANDO...";
 
@@ -157,63 +171,74 @@ if (form) {
     const emailEl = document.getElementById("lead_email");
     const phoneEl = document.getElementById("lead_phone");
 
-    // Telefone limpo em formato E.164 (5581987654321)
-    const telLimpo = "55" + phoneEl.value.replace(/\D/g, "");
+    // E.164 sem duplicar o país (a máscara/PixelX já escrevem "+55")
+    const telE164 = "55" + phoneDigitsNacional(phoneEl.value);
 
     const payload = {
       name: nomeEl.value.trim(),
       email: emailEl.value.trim(),
       phone: phoneEl.value.trim(),
-      phone_e164: telLimpo,
+      phone_e164: telE164,
       escolaridade: escolaridadeSelect.options[escolaridadeSelect.selectedIndex].text,
       pagina_url: window.location.href,
       utm_source: new URLSearchParams(window.location.search).get("utm_source") || "",
       utm_campaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
     };
 
+    // Backup do lead na planilha. Não bloqueia o redirect: a PixelX já capturou
+    // o Lead no submit que acabou de propagar.
     try {
       await fetch(SHEET_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
       });
-
-      if (success) {
-        form.querySelectorAll(".field, .note").forEach((el) => {
-          el.style.display = "none";
-        });
-
-        btn.style.display = "none";
-        success.hidden = false;
-        success.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-
-      // Redirect com dados explícitos — não depende da captura automática do pixel
-      const params = new URLSearchParams({
-        text: WHATSAPP_MSG,
-        name: nomeEl.value.trim(),
-        email: emailEl.value.trim(),
-        phone: telLimpo
-      });
-
-      // "Não tenho" Ensino Médio → supletivo; caso contrário, o redirect ativo
-      const semEnsinoMedio = escolaridadeSelect.value === "segunda-graduacao";
-      const destino = semEnsinoMedio ? SUPLETIVO_REDIRECT : activeRedirect;
-
-      setTimeout(() => {
-        window.location.href = `${destino}?${params.toString()}`;
-      }, 700);
-
     } catch (err) {
-      console.error("[Form] Erro ao enviar:", err);
-
-      setError("phone", "Erro ao enviar. Tente novamente.");
-
-      btn.disabled = false;
-      btn.textContent = "QUERO GARANTIR MINHA VAGA";
+      console.error("[Form] Falha ao salvar na planilha (segue o redirect):", err);
     }
-  });
+
+    if (success) {
+      form.querySelectorAll(".field, .note").forEach((el) => {
+        el.style.display = "none";
+      });
+      btn.style.display = "none";
+      success.hidden = false;
+      success.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    const params = new URLSearchParams({
+      text: WHATSAPP_MSG,
+      name: nomeEl.value.trim(),
+      email: emailEl.value.trim(),
+      phone: telE164
+    });
+
+    // "Não tenho" Ensino Médio → supletivo; caso contrário, o redirect ativo
+    // (WhatsApp direto, ou grupos quando aberto por um card de curso).
+    const semEnsinoMedio = escolaridadeSelect.value === "segunda-graduacao";
+    const destino = semEnsinoMedio ? SUPLETIVO_REDIRECT : activeRedirect;
+
+    setTimeout(() => {
+      window.location.href = `${destino}?${params.toString()}`;
+    }, REDIRECT_DELAY_MS);
+  }
+
+  // Barreira em fase de CAPTURA no document: roda SEMPRE antes do listener de
+  // submit da PixelX. Inválido → mata o evento aqui (PixelX não registra Lead);
+  // válido → deixa propagar (PixelX registra o Lead) e nós salvamos + redirecionamos.
+  document.addEventListener("submit", (e) => {
+    if (e.target !== form) return;
+
+    e.preventDefault(); // nunca recarrega/navega pelo form
+
+    // Já enviado ou inválido → o evento morre aqui, sem chegar na PixelX (sem duplicar)
+    if (enviado || !validate()) {
+      e.stopImmediatePropagation();
+      return;
+    }
+
+    enviado = true;
+    enviarLead();
+  }, true);
 }
