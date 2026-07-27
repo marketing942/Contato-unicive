@@ -646,6 +646,55 @@
       .site-footer__col a{text-align:center}
       .site-footer__bottom{justify-content:center;text-align:center}
     }
+
+    /* ===== EXIT POPUP (intenção de saída) =====
+       Reaproveita .modal-overlay, .modal-box, .modal-close, .form, .field,
+       .cta, .note e .success. Só o miolo da oferta é novo. */
+    .exit__eyebrow{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--green);margin-bottom:10px;
+    }
+    .exit__eyebrow::before,
+    .exit__eyebrow::after{content:"";width:18px;height:1px;background:var(--gold)}
+
+    .exit__title{
+      font-family:'Bebas Neue',sans-serif;font-weight:400;
+      font-size:clamp(26px,6vw,32px);line-height:1.04;letter-spacing:.5px;
+      color:var(--green-darker);text-align:center;text-wrap:balance;
+      margin-bottom:8px;
+    }
+    /* Marca-texto dourado: mantém o brilho da marca sem jogar texto dourado
+       sobre branco, que ficaria ilegível. */
+    .exit__title span{
+      background:linear-gradient(180deg,transparent 62%,rgba(243,193,79,.75) 62%);
+      padding:0 2px;
+    }
+
+    .exit__sub{
+      text-align:center;color:var(--muted);
+      font-size:14px;font-weight:600;margin-bottom:14px;
+    }
+
+    .exit__benefits{
+      list-style:none;margin:0 0 18px;padding:14px 16px;
+      background:#f7faf1;border:1.5px solid rgba(227,161,27,.45);border-radius:14px;
+    }
+    .exit__benefits li{
+      display:flex;align-items:flex-start;gap:9px;text-align:left;
+      color:var(--ink);font-size:14px;font-weight:600;line-height:1.45;
+    }
+    .exit__benefits li+li{margin-top:9px}
+    .exit__benefits li::before{content:"✓";color:var(--green);font-weight:800;flex:0 0 auto}
+
+    .exit__decline{
+      display:block;margin:12px auto 0;background:none;border:0;
+      color:var(--muted);font-family:inherit;font-size:12.5px;font-weight:600;
+      cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+      transition:color .15s;
+    }
+    .exit__decline:hover{color:var(--green-dark)}
+    .exit__decline:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
   </style>
 
 </head>
@@ -1047,6 +1096,48 @@
       <span>Graduação reconhecida pelo MEC · Válida em todo o Brasil.</span>
     </div>
   </footer>
+
+
+  <!-- ===== EXIT POPUP (intenção de saída) ===== -->
+  <div class="modal-overlay" id="exit-modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+      <button type="button" class="modal-close" data-exit-close aria-label="Fechar">&times;</button>
+
+      <div class="form">
+        <span class="exit__eyebrow">Espera um pouco</span>
+        <h2 class="exit__title" id="exit-title">Não desista do seu sonho de ter um <span>diploma</span>!</h2>
+        <p class="exit__sub">Inscreva-se abaixo para receber:</p>
+
+        <ul class="exit__benefits">
+          <li>Comunidade com novidades diárias, materiais gratuitos, dicas e descontos!</li>
+        </ul>
+
+        <form id="exit-form" novalidate>
+          <div class="field">
+            <input type="text" id="exit_name" name="name" autocomplete="name" placeholder="Nome completo" required />
+            <span class="error" data-error-for="exit_name"></span>
+          </div>
+          <div class="field">
+            <input type="email" id="exit_email" name="email" autocomplete="email" placeholder="E-mail" required />
+            <span class="error" data-error-for="exit_email"></span>
+          </div>
+          <div class="field">
+            <input type="text" id="exit_phone" name="phone" class="pxa_mask_phone" inputmode="tel" autocomplete="tel" placeholder="Seu WhatsApp: (00) 00000-0000" required />
+            <span class="error" data-error-for="exit_phone"></span>
+          </div>
+
+          <button type="submit" id="exit_submit" class="cta">QUERO ENTRAR NA COMUNIDADE</button>
+          <p class="note">Cadastro gratuito. Seus dados estão seguros.</p>
+          <p class="success" id="exit-success" role="status" hidden>
+            ✅ Inscrição confirmada!<br />
+            Você está entrando na comunidade.
+          </p>
+        </form>
+
+        <button type="button" class="exit__decline" data-exit-close data-exit-decline>Não, quero continuar sem ajuda</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 
