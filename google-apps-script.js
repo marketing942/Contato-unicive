@@ -29,7 +29,6 @@ const COLUNAS = [
   { titulo: "Nome",         largura: 220, formato: "@" },
   { titulo: "Email",        largura: 250, formato: "@" },
   { titulo: "Telefone",     largura: 180, formato: "@" },
-  { titulo: "Escolaridade", largura: 180, formato: "@" },
   { titulo: "Pagina URL",   largura: 320, formato: "@" },
   { titulo: "UTM Source",   largura: 150, formato: "@" },
   { titulo: "UTM Campaign", largura: 220, formato: "@" }
@@ -122,7 +121,6 @@ function montarLinha(dados, params) {
     pegar(dados, ["nome", "name", "nome_completo"]),
     pegar(dados, ["email", "e-mail", "mail"]),
     telefoneTexto(pegar(dados, ["telefone", "phone", "whatsapp", "celular", "phone_e164"])),
-    pegar(dados, ["escolaridade", "serie", "nivel"]),
     paginaUrl,
     pegar(dados, ["utm_source", "utmSource"]),
     pegar(dados, ["utm_campaign", "utmCampaign"])
@@ -269,7 +267,6 @@ function migrarAbasAntigasParaLEADS() {
     const cNome = idx(["nome", "name"]);
     const cMail = idx(["e-mail", "email"]);
     const cTel  = idx(["telefone", "phone", "whatsapp"]);
-    const cEsc  = idx(["escolaridade"]);
     const cUrl  = idx(["página url", "pagina url", "pagina_url", "página", "pagina"]);
     const cSrc  = idx(["utm source", "utm_source"]);
     const cCamp = idx(["utm campaign", "utm_campaign"]);
@@ -286,7 +283,6 @@ function migrarAbasAntigasParaLEADS() {
         val(l, cNome),
         val(l, cMail),
         telefoneTexto(val(l, cTel)),
-        val(l, cEsc),
         val(l, cUrl),
         val(l, cSrc),
         val(l, cCamp)

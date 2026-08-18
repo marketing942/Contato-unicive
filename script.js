@@ -216,7 +216,6 @@ if (form) {
       email: emailEl.value.trim(),
       phone: phoneEl.value.trim(),
       phone_e164: telE164,
-      escolaridade: escolaridadeSelect.options[escolaridadeSelect.selectedIndex].text,
       origem: "UNICIVE",
       pagina_url: window.location.href,
       utm_source: utm("utm_source"),
