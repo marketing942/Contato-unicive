@@ -3,7 +3,13 @@
    Formulário → Google Sheets → redirect WhatsApp
    ========================================================= */
 
+/* Todos os projetos gravam na MESMA aba (LEADS) da planilha. O ?aba= não
+   escolhe mais a aba de destino: ele identifica QUEM enviou, e vira a coluna
+   "Origem" lá. O nome abaixo vira a coluna "Página" — rótulo legível ao lado
+   da URL crua, para filtrar sem depender do link. */
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxdFplWVSfhTjvyIA7HIWb645xRjGNhBVhTdTf5UMjo0lSpW_A_jCuys0qB4uImKXPQ/exec?aba=UNICIVE";
+
+const PAGINA_NOME = "UniCV Caruaru — Pré-venda";
 
 // WhatsApp direto — (81) 99264-0766 — substitui o antigo link rastreado
 const WHATSAPP_NUMERO = "5581992640766";
@@ -180,6 +186,8 @@ if (form) {
       phone: phoneEl.value.trim(),
       phone_e164: telE164,
       escolaridade: escolaridadeSelect.options[escolaridadeSelect.selectedIndex].text,
+      origem: "UNICIVE",
+      pagina_nome: PAGINA_NOME,
       pagina_url: window.location.href,
       utm_source: new URLSearchParams(window.location.search).get("utm_source") || "",
       utm_campaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
@@ -547,14 +555,15 @@ function enviarComunidade() {
   const phoneEl = document.getElementById("exit_phone");
   const telE164 = "55" + phoneDigitsNacional(phoneEl.value);
 
-  // Chaves em português: é o que o google-apps-script.js deste projeto lê.
   const payload = {
     nome: nomeEl.value.trim(),
     email: emailEl.value.trim(),
     telefone: phoneEl.value.trim(),
     phone_e164: telE164,
-    origem: "exit_popup_comunidade",
+    origem: "UNICIVE_COMUNIDADE",
+    formulario: "Comunidade (exit popup)",
     gatilho: ExitPopup.trigger || "",
+    pagina_nome: PAGINA_NOME,
     pagina_url: window.location.href,
     utm_source: new URLSearchParams(window.location.search).get("utm_source") || "",
     utm_campaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
