@@ -1,8 +1,7 @@
 /* =========================================================
    CPPEM — Backend único de captura (Google Apps Script)
    Todos os projetos (CPPEM, UNICIVE, PMPE, COLEGIO, ...) gravam
-   na MESMA aba: LEADS. A identificação de quem enviou vem nas
-   colunas "Origem" e "Página".
+   na MESMA aba. A identificação de quem enviou vem na coluna "Origem".
 
    Como publicar:
    1) Planilha → Extensões → Apps Script → cole ESTE arquivo inteiro
@@ -27,35 +26,32 @@ const FUSO = "America/Recife";
 const COLUNAS = [
   { titulo: "Data e Hora",  largura: 160, formato: "dd/MM/yyyy HH:mm:ss" },
   { titulo: "Origem",       largura: 120, formato: "@" },
-  { titulo: "Página",       largura: 260, formato: "@" },
-  { titulo: "Formulário",   largura: 170, formato: "@" },
   { titulo: "Nome",         largura: 220, formato: "@" },
-  { titulo: "E-mail",       largura: 250, formato: "@" },
+  { titulo: "Email",        largura: 250, formato: "@" },
   { titulo: "Telefone",     largura: 180, formato: "@" },
   { titulo: "Escolaridade", largura: 180, formato: "@" },
-  { titulo: "Página URL",   largura: 320, formato: "@" },
+  { titulo: "Pagina URL",   largura: 320, formato: "@" },
   { titulo: "UTM Source",   largura: 150, formato: "@" },
   { titulo: "UTM Campaign", largura: 220, formato: "@" }
 ];
 
-/* De onde veio o lead. A chave é o que chega em ?aba= (ou ?origem=) na URL do
-   /exec — mantive os nomes antigos das abas como chave para que NENHUM site
-   quebre enquanto os fronts não forem atualizados.
-
-   `nome` é o "nome padrão da página" pedido: um rótulo legível que acompanha a
-   URL crua, para dar para filtrar sem depender do link. */
+/* De onde veio o lead: chave = o que chega em ?aba= (ou ?origem=) na URL do
+   /exec, valor = o que aparece na coluna "Origem". Mantive os nomes antigos
+   das abas como chave para que NENHUM site quebre enquanto os fronts não
+   forem atualizados — CAPTURA e MANYCHAT são apelidos históricos de CPPEM e
+   PMPE, e os "_COMUNIDADE" (exit popup) contam como a própria unidade. */
 const ORIGENS = {
-  CPPEM:              { origem: "CPPEM",     nome: "CPPEM — Preparatório",      form: "Principal" },
-  CAPTURA:            { origem: "CPPEM",     nome: "CPPEM — Preparatório",      form: "Principal" },
-  CAPTURA_COMUNIDADE: { origem: "CPPEM",     nome: "CPPEM — Preparatório",      form: "Comunidade (exit popup)" },
-  UNICIVE:            { origem: "UNICIVE",   nome: "UniCV Caruaru — Pré-venda", form: "Principal" },
-  UNICIVE_COMUNIDADE: { origem: "UNICIVE",   nome: "UniCV Caruaru — Pré-venda", form: "Comunidade (exit popup)" },
-  PMPE:               { origem: "PMPE",      nome: "PMPE — ManyChat",           form: "Principal" },
-  MANYCHAT:           { origem: "PMPE",      nome: "PMPE — ManyChat",           form: "Principal" },
-  COLEGIO:            { origem: "COLEGIO",   nome: "Colégio CPPEM — Contato",   form: "Principal" },
-  FARDA:              { origem: "FARDA",     nome: "Farda",                     form: "Principal" },
-  SUPLETIVO:          { origem: "SUPLETIVO", nome: "Supletivo",                 form: "Principal" },
-  CASA:               { origem: "CASA",      nome: "Casa",                      form: "Principal" }
+  CPPEM:              "CPPEM",
+  CAPTURA:            "CPPEM",
+  CAPTURA_COMUNIDADE: "CPPEM",
+  UNICIVE:            "UNICIVE",
+  UNICIVE_COMUNIDADE: "UNICIVE",
+  PMPE:               "PMPE",
+  MANYCHAT:           "PMPE",
+  COLEGIO:            "COLEGIO",
+  FARDA:              "FARDA",
+  SUPLETIVO:          "SUPLETIVO",
+  CASA:               "CASA"
 };
 
 /* Rede de segurança: se um site esquecer o ?aba= e o payload não trouxer
@@ -114,17 +110,15 @@ function montarLinha(dados, params) {
 
   const paginaUrl = pegar(dados, ["pagina_url", "pagina", "page_url", "url"]);
 
-  const perfil = ORIGENS[chave] || ORIGENS[deduzirPorUrl(paginaUrl)] || {
-    origem: chave || "DESCONHECIDA",
-    nome: "",
-    form: "Principal"
-  };
+  const origem =
+    ORIGENS[chave] ||
+    ORIGENS[deduzirPorUrl(paginaUrl)] ||
+    chave ||
+    "DESCONHECIDA";
 
   return [
     new Date(),
-    perfil.origem,
-    pegar(dados, ["pagina_nome", "nome_pagina", "titulo_pagina"]) || perfil.nome,
-    pegar(dados, ["formulario", "form", "tipo"]) || perfil.form,
+    origem,
     pegar(dados, ["nome", "name", "nome_completo"]),
     pegar(dados, ["email", "e-mail", "mail"]),
     telefoneTexto(pegar(dados, ["telefone", "phone", "whatsapp", "celular", "phone_e164"])),
@@ -258,11 +252,7 @@ function migrarAbasAntigasParaLEADS() {
     if (nome === ABA_DESTINO) return;
     if (aba.getLastRow() < 2) return;
 
-    const perfil = ORIGENS[normalizarChave(nome)] || {
-      origem: normalizarChave(nome),
-      nome: "",
-      form: "Principal"
-    };
+    const origem = ORIGENS[normalizarChave(nome)] || normalizarChave(nome);
 
     const tabela = aba.getRange(1, 1, aba.getLastRow(), aba.getLastColumn()).getValues();
     const cab = tabela[0].map(function (t) { return String(t).trim().toLowerCase(); });
@@ -292,9 +282,7 @@ function migrarAbasAntigasParaLEADS() {
 
       linhas.push([
         cData >= 0 ? (l[cData] instanceof Date ? l[cData] : parsarData(l[cData])) : "",
-        perfil.origem,
-        perfil.nome,
-        perfil.form,
+        origem,
         val(l, cNome),
         val(l, cMail),
         telefoneTexto(val(l, cTel)),

@@ -5,11 +5,42 @@
 
 /* Todos os projetos gravam na MESMA aba (LEADS) da planilha. O ?aba= não
    escolhe mais a aba de destino: ele identifica QUEM enviou, e vira a coluna
-   "Origem" lá. O nome abaixo vira a coluna "Página" — rótulo legível ao lado
-   da URL crua, para filtrar sem depender do link. */
+   "Origem" lá. */
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxdFplWVSfhTjvyIA7HIWb645xRjGNhBVhTdTf5UMjo0lSpW_A_jCuys0qB4uImKXPQ/exec?aba=UNICIVE";
 
-const PAGINA_NOME = "UniCV Caruaru — Pré-venda";
+/* ---------- UTMs ----------
+   As UTMs só existem na URL do PRIMEIRO acesso. Se a pessoa recarrega, volta
+   pelo histórico, ou o link do anúncio cai numa página que redireciona, o
+   ?utm_source= já não está mais lá na hora do submit — e o lead chegava na
+   planilha sem origem nenhuma. Por isso gravamos assim que a página carrega e
+   lemos do storage no envio (first touch). O try/catch cobre navegador com
+   storage bloqueado (aba anônima, ITP), onde o comportamento volta a ser o
+   antigo em vez de quebrar o formulário. */
+const UTM_CAMPOS = ["utm_source", "utm_campaign"];
+
+(function guardarUTMs() {
+  UTM_CAMPOS.forEach((chave) => {
+    const valor = qs.get(chave);
+    if (!valor) return;
+
+    try {
+      sessionStorage.setItem(chave, valor);
+    } catch (e) {
+      /* storage indisponível: segue sem persistir */
+    }
+  });
+})();
+
+function utm(chave) {
+  const daUrl = new URLSearchParams(window.location.search).get(chave);
+  if (daUrl) return daUrl;
+
+  try {
+    return sessionStorage.getItem(chave) || "";
+  } catch (e) {
+    return "";
+  }
+}
 
 // WhatsApp direto — (81) 99264-0766 — substitui o antigo link rastreado
 const WHATSAPP_NUMERO = "5581992640766";
@@ -187,10 +218,9 @@ if (form) {
       phone_e164: telE164,
       escolaridade: escolaridadeSelect.options[escolaridadeSelect.selectedIndex].text,
       origem: "UNICIVE",
-      pagina_nome: PAGINA_NOME,
       pagina_url: window.location.href,
-      utm_source: new URLSearchParams(window.location.search).get("utm_source") || "",
-      utm_campaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
+      utm_source: utm("utm_source"),
+      utm_campaign: utm("utm_campaign")
     };
 
     // Backup do lead na planilha. Não bloqueia o redirect: a PixelX já capturou
@@ -561,12 +591,10 @@ function enviarComunidade() {
     telefone: phoneEl.value.trim(),
     phone_e164: telE164,
     origem: "UNICIVE_COMUNIDADE",
-    formulario: "Comunidade (exit popup)",
     gatilho: ExitPopup.trigger || "",
-    pagina_nome: PAGINA_NOME,
     pagina_url: window.location.href,
-    utm_source: new URLSearchParams(window.location.search).get("utm_source") || "",
-    utm_campaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
+    utm_source: utm("utm_source"),
+    utm_campaign: utm("utm_campaign")
   };
 
   // Fire-and-forget, de propósito. Com mode:"no-cors" não dá para ler a
