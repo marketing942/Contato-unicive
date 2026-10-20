@@ -1,8 +1,11 @@
 # Exit Popup (Exit Intent) — UniCV Caruaru
 
 Popup de intenção de saída instalado nesta landing. Mesmo padrão das outras
-capturas da CPPEM, adaptado à identidade daqui (verde + dourado sobre fundo
-claro, Montserrat + Bebas Neue).
+capturas da CPPEM. No rebranding de 19/10/2026, a apresentação passou a usar
+verde profundo e dourado, com formulário em fundo marfim e tipografia Manrope
+e DM Sans. O formulário principal agora fica visível junto aos cursos; o popup
+de saída não interrompe o visitante enquanto ele está preenchendo seus dados.
+Os contratos de tracking e a separação da comunidade foram preservados.
 
 ---
 

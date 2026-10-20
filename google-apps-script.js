@@ -20,7 +20,7 @@
    mão: o script só escreve nas colunas que conhece, e qualquer coluna que ele
    não conheça fica intocada. Mudar a ordem das colunas na planilha também não
    quebra nada.
-
+   
    Como publicar:
    1) Planilha → Extensões → Apps Script → cole ESTE arquivo inteiro
       (substituindo o Codigo.gs antigo) e salve.

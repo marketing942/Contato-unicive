@@ -56,60 +56,61 @@ const SUPLETIVO_REDIRECT = "https://cppem-supletivo-filiado.vercel.app/";
 // Abaixo disso, a navegação cancela a requisição do evento de conversão.
 const REDIRECT_DELAY_MS = 1500;
 
-/* ---------- Popup do formulário ---------- */
-const formModal = document.getElementById("form-modal");
+/* ---------- Formulário visível na seção de cursos ---------- */
+const inlineFormPanel = document.getElementById("inscricao");
 const openFormTriggers = document.querySelectorAll("#open-form-btn, .js-open-form");
-const closeFormBtn = document.getElementById("close-form-btn");
 
 // Redirect ativo — pode ser sobrescrito pelo gatilho (ex.: cards de curso → grupos)
 let activeRedirect = WHATSAPP_REDIRECT;
 
-async function openFormModal(trigger) {
-  if (!formModal) return;
-  activeRedirect =
-    (trigger && trigger.dataset && trigger.dataset.redirect) || WHATSAPP_REDIRECT;
-  formModal.hidden = false;
-  document.body.classList.add("modal-open");
-
-  // PixelX: carrega/aplica a máscara de telefone ao abrir o popup
+let applyingPhoneMask = false;
+async function applyPhoneMask() {
+  if (applyingPhoneMask) return;
+  applyingPhoneMask = true;
   try {
     if (window.pixel_x_app && typeof window.pixel_x_app.mask_load === "function") {
       await window.pixel_x_app.mask_load();
     }
   } catch (err) {
     console.warn("[PixelX] mask_load falhou:", err);
+  } finally {
+    applyingPhoneMask = false;
   }
 }
 
-function closeFormModal() {
-  if (!formModal) return;
-  formModal.hidden = true;
-  document.body.classList.remove("modal-open");
+function goToLeadForm(trigger) {
+  if (!inlineFormPanel) return;
+  activeRedirect =
+    (trigger && trigger.dataset && trigger.dataset.redirect) || WHATSAPP_REDIRECT;
+  inlineFormPanel.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+    block: "start"
+  });
+  const target = document.getElementById("lead_submit")?.disabled
+    ? document.getElementById("form-success")
+    : document.getElementById("lead_name");
+  target?.focus({ preventScroll: true });
+  applyPhoneMask();
 }
 
 openFormTriggers.forEach((el) => {
-  el.addEventListener("click", () => openFormModal(el));
+  el.addEventListener("click", () => goToLeadForm(el));
   // Suporte a teclado para gatilhos que não são <button> (ex.: cards de curso)
   if (el.tagName !== "BUTTON") {
     el.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        openFormModal(el);
+        goToLeadForm(el);
       }
     });
   }
 });
-if (closeFormBtn) closeFormBtn.addEventListener("click", closeFormModal);
-
-if (formModal) {
-  formModal.addEventListener("click", (e) => {
-    if (e.target === formModal) closeFormModal();
-  });
+if (inlineFormPanel) {
+  // O visitante pode preencher diretamente, sem passar por um botão.
+  inlineFormPanel.addEventListener("focusin", applyPhoneMask);
+  window.addEventListener("load", applyPhoneMask, { once: true });
+  applyPhoneMask();
 }
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && formModal && !formModal.hidden) closeFormModal();
-});
 
 /* ---------- Navbar revelado ao rolar (abaixo da logo do topo) ---------- */
 const navbar = document.getElementById("navbar");
@@ -360,8 +361,8 @@ const ExitPopup = {
     if (ExitStore.sGet(EXIT_KEY_SEEN)) return true;
     const until = parseInt(ExitStore.get(EXIT_KEY_SNOOZE) || "0", 10);
     if (until && Date.now() < until) return true;
-    // nunca por cima do popup do formulário principal
-    return !!(formModal && !formModal.hidden);
+    // Não interrompe o preenchimento do formulário visível.
+    return !!(inlineFormPanel && inlineFormPanel.contains(document.activeElement));
   },
 
   canFire() {
