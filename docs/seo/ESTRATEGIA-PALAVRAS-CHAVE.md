@@ -62,7 +62,7 @@ URL por intenção.
 | Intenção / busca | URL que deve responder | Situação |
 |---|---|---|
 | graduação EAD / faculdade EAD Caruaru | contato.unicive.cppem.com.br/ ou unicive.cppem.com.br/ | Title implementado aqui; decidir a URL dona |
-| supletivo / terminar o Ensino Médio | Supletivo (cppem-supletivo-filiado.vercel.app) | Já é o destino de quem responde "Não tenho" |
+| supletivo / terminar o Ensino Médio | supletivo.cppem.com.br | Já é o destino de quem responde "Não tenho" |
 
 ## Estratégia da página
 
